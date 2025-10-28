@@ -1,3 +1,4 @@
+import React from "react";
 import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 

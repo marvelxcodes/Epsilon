@@ -1,5 +1,6 @@
+import React from "react";
 import { authClient } from "@/lib/auth-client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { Container } from "@/components/container";
@@ -8,6 +9,18 @@ import { SignUp } from "@/components/sign-up";
 
 export default function Home() {
 	const { data: session } = authClient.useSession();
+	const queryClient = useQueryClient();
+
+	const healthCheck = useQuery({
+		queryKey: ["health"],
+		queryFn: () => fetch("/api/health").then(res => res.json()),
+	});
+
+	const privateData = useQuery({
+		queryKey: ["private"],
+		queryFn: () => fetch("/api/private").then(res => res.json()),
+		enabled: !!session?.user,
+	});
 
 	return (
 		<Container>
