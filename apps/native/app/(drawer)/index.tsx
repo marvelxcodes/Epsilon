@@ -1,92 +1,76 @@
-import React from "react";
-import { authClient } from "@/lib/auth-client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
+import React, { useEffect, useState } from "react";
+import { ScrollView, Text, View, Alert } from "react-native";
 import { Container } from "@/components/container";
-import { SignIn } from "@/components/sign-in";
-import { SignUp } from "@/components/sign-up";
+import { AddMedication } from "@/components/add-medication";
+import { MedicationList, type Medication } from "@/components/medication-list";
+import {
+	requestNotificationPermissions,
+	scheduleMedicationNotification,
+	cancelNotification,
+} from "@/lib/notifications";
 
 export default function Home() {
-	const { data: session } = authClient.useSession();
-	const queryClient = useQueryClient();
+	const [medications, setMedications] = useState<Medication[]>([]);
 
-	const healthCheck = useQuery({
-		queryKey: ["health"],
-		queryFn: () => fetch("/api/health").then(res => res.json()),
-	});
+	useEffect(() => {
+		requestNotificationPermissions();
+	}, []);
 
-	const privateData = useQuery({
-		queryKey: ["private"],
-		queryFn: () => fetch("/api/private").then(res => res.json()),
-		enabled: !!session?.user,
-	});
+	const handleAddMedication = async (medication: {
+		name: string;
+		time: Date;
+		notes?: string;
+	}) => {
+		try {
+			const notificationId = await scheduleMedicationNotification(
+				medication.name,
+				medication.time,
+				medication.notes,
+			);
+
+			const newMedication: Medication = {
+				id: notificationId,
+				...medication,
+			};
+
+			setMedications([...medications, newMedication]);
+			Alert.alert(
+				"Success",
+				`Reminder set for ${medication.name} at ${medication.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+			);
+		} catch (error) {
+			Alert.alert("Error", "Failed to schedule notification");
+			console.error(error);
+		}
+	};
+
+	const handleDeleteMedication = async (id: string) => {
+		try {
+			await cancelNotification(id);
+			setMedications(medications.filter((med) => med.id !== id));
+			Alert.alert("Success", "Reminder deleted");
+		} catch (error) {
+			Alert.alert("Error", "Failed to delete notification");
+			console.error(error);
+		}
+	};
 
 	return (
 		<Container>
 			<ScrollView className="flex-1">
-				<View className="px-4">
-					<Text className="font-mono text-foreground text-3xl font-bold mb-4">
-						BETTER T STACK
+				<View className="px-4 py-6">
+					<Text className="font-mono text-foreground text-3xl font-bold mb-2">
+						💊 MEDICATION REMINDER
 					</Text>
-					{session?.user ? (
-						<View className="mb-6 p-4 bg-card rounded-lg border border-border">
-							<View className="flex-row justify-between items-center mb-2">
-								<Text className="text-foreground text-base">
-									Welcome,{" "}
-									<Text className="font-medium">{session.user.name}</Text>
-								</Text>
-							</View>
-							<Text className="text-muted-foreground text-sm mb-4">
-								{session.user.email}
-							</Text>
+					<Text className="text-muted-foreground mb-6">
+						Never forget to take your medication
+					</Text>
 
-							<TouchableOpacity
-								className="bg-destructive py-2 px-4 rounded-md self-start"
-								onPress={() => {
-									authClient.signOut();
-									queryClient.invalidateQueries();
-								}}
-							>
-								<Text className="text-white font-medium">Sign Out</Text>
-							</TouchableOpacity>
-						</View>
-					) : null}
-					<View className="mb-6 rounded-lg border border-border p-4">
-						<Text className="mb-3 font-medium text-foreground">API Status</Text>
-						<View className="flex-row items-center gap-2">
-							<View
-								className={`h-3 w-3 rounded-full ${
-									healthCheck.data ? "bg-green-500" : "bg-red-500"
-								}`}
-							/>
-							<Text className="text-muted-foreground">
-								{healthCheck.isLoading
-									? "Checking..."
-									: healthCheck.data
-										? "Connected to API"
-										: "API Disconnected"}
-							</Text>
-						</View>
-					</View>
-					<View className="mb-6 rounded-lg border border-border p-4">
-						<Text className="mb-3 font-medium text-foreground">
-							Private Data
-						</Text>
-						{privateData && (
-							<View>
-								<Text className="text-muted-foreground">
-									{privateData.data?.message}
-								</Text>
-							</View>
-						)}
-					</View>
-					{!session?.user && (
-						<>
-							<SignIn />
-							<SignUp />
-						</>
-					)}
+					<AddMedication onAdd={handleAddMedication} />
+					<MedicationList
+						medications={medications}
+						onDelete={handleDeleteMedication}
+					/>
 				</View>
 			</ScrollView>
 		</Container>
