@@ -1,50 +1,78 @@
-# 💊 Medication Reminder App
+# 🏠 Emergency Contact & Fall Detection App
 
-A simple medication reminder app that sends notifications at scheduled times.
+A simple emergency assistance app with quick access to contacts and SOS functionality.
 
 ## Features
 
-- ✅ Add medication reminders with name, time, and notes
-- ✅ Daily recurring notifications at the specified time
-- ✅ Delete reminders when no longer needed
-- ✅ Clean, simple interface focused on medication management
+### Home Screen
 
-## How It Works
+- ✅ **Live Clock** - Shows current time and date
+- ✅ **Quick Contacts** - One-tap calling for frequently contacted people
+- ✅ **Emergency SOS Button** - Send instant alerts to emergency contacts
+- ✅ Clean, large UI perfect for quick access
 
-1. **Add a Medication**: Enter the medication name, select a time, and optionally add notes (e.g., "Take with food")
-2. **Set Reminder**: The app schedules a daily notification at the specified time
-3. **Receive Notifications**: You'll get a notification every day at the scheduled time
-4. **Manage Reminders**: View all your medications and delete them when needed
+### Settings Screen
 
-## Files Created/Modified
+- ✅ **Manage Quick Contacts** - Add/remove contacts for the home screen
+- ✅ **Manage SOS Contacts** - Configure who receives emergency alerts
+- ✅ **Persistent Storage** - All contacts saved locally using AsyncStorage
 
-- `components/add-medication.tsx` - Form to add new medication reminders
-- `components/medication-list.tsx` - Display list of all medications
-- `lib/notifications.ts` - Notification scheduling logic
-- `app/(drawer)/index.tsx` - Main home screen (updated)
-- `app.json` - Added notification permissions
+### Fall Detection Screen
 
-## Next Steps
+- 🚧 **Coming Soon** - Automatic fall detection with emergency alerts
 
-To test the app:
+## Navigation
 
-1. Run the app: `cd apps/native && bun run dev`
-2. Add a medication with a time a few minutes in the future
-3. Close the app or put it in the background
-4. Wait for the notification to appear
+The app uses **bottom tab navigation** with 3 tabs:
 
-## Important Notes
+1. **Home** (🏠) - Main screen with clock, contacts, and SOS
+2. **Fall Detection** (💓) - Placeholder for future feature
+3. **Settings** (⚙️) - Configure contacts
 
-- Notifications repeat daily at the same time
-- If you set a time that's already passed today, it will schedule for tomorrow
-- Make sure to grant notification permissions when prompted
-- The app needs to be rebuilt (`expo prebuild`) if you want to test on a physical device
+## How to Use
 
-## Future Enhancements (Optional)
+1. **Setup Contacts**:
 
-- [ ] Persist medications to storage (AsyncStorage or database)
-- [ ] Add multiple times per day for same medication
-- [ ] Add dosage information
-- [ ] Track medication history (taken/missed)
-- [ ] Add refill reminders
-- [ ] Custom notification sounds
+   - Go to Settings tab
+   - Add "Quick Contacts" for easy calling from home
+   - Add "SOS Contacts" who will receive emergency alerts
+
+2. **Home Screen**:
+
+   - View current time prominently displayed
+   - Tap any quick contact to call them
+   - Press the big red SOS button in emergencies
+
+3. **SOS Functionality**:
+   - Press the SOS button
+   - Confirm the alert
+   - All configured SOS contacts will be notified
+
+## Technical Details
+
+### Files Structure
+
+```
+app/(drawer)/
+  ├── index.tsx              # Home screen (clock, contacts, SOS)
+  └── (tabs)/
+      ├── _layout.tsx        # Tab navigation setup
+      ├── fall-detection.tsx # Placeholder screen
+      └── settings.tsx       # Contact management
+```
+
+### Data Storage
+
+- Uses `@react-native-async-storage/async-storage`
+- Contacts stored locally on device
+- Persists between app restarts
+
+### Future Enhancements
+
+- [ ] Actual phone call integration using `react-native-communications`
+- [ ] SMS sending for SOS alerts
+- [ ] Fall detection using device accelerometer
+- [ ] Location sharing in SOS messages
+- [ ] Emergency services integration (911/112)
+- [ ] Medical information storage
+- [ ] Medication reminders

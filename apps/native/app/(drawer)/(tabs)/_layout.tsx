@@ -27,19 +27,29 @@ export default function TabLayout() {
 			}}
 		>
 			<Tabs.Screen
+				name="fall-detection"
+				options={{
+					title: "Fall Detection",
+					tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color} />,
+				}}
+			/>
+			<Tabs.Screen
+				name="settings"
+				options={{
+					title: "Settings",
+					tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+				}}
+			/>
+			<Tabs.Screen
 				name="index"
 				options={{
-					title: "Home",
-					tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+					href: null,
 				}}
 			/>
 			<Tabs.Screen
 				name="two"
 				options={{
-					title: "Explore",
-					tabBarIcon: ({ color }) => (
-						<TabBarIcon name="compass" color={color} />
-					),
+					href: null,
 				}}
 			/>
 		</Tabs>
