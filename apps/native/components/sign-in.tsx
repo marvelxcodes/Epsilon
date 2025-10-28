@@ -1,3 +1,4 @@
+import React from "react";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import {
@@ -7,12 +8,13 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-
+import { useQueryClient } from "@tanstack/react-query";
 export function SignIn() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const queryClient = useQueryClient();
 
 	const handleLogin = async () => {
 		setIsLoading(true);
