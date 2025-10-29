@@ -1,19 +1,32 @@
-import { expo } from '@better-auth/expo';
-import { nextCookies } from 'better-auth/next-js';
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { expo } from "@better-auth/expo";
+import { db } from "@epsilon/db";
+import * as schema from "@epsilon/db/schema/auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@fallbag/db";
-import * as schema from "@fallbag/db/schema/auth";
+import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth<BetterAuthOptions>({
-	database: drizzleAdapter(db, {
-		provider: "pg",
+  database: drizzleAdapter(db, {
+    provider: "pg",
 
-		schema: schema,
-	}),
-	trustedOrigins: [process.env.CORS_ORIGIN || "", "mybettertapp://", "exp://"],
-	emailAndPassword: {
-		enabled: true,
-	},
-  plugins: [nextCookies(), expo()]
+    schema,
+  }),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",
+    "http://localhost:3001",
+    "mybettertapp://",
+    "exp://",
+  ],
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === "production",
+    crossSubDomainCookies: {
+      enabled: true,
+    },
+    disableCSRFCheck: true,
+  },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false,
+  },
+  plugins: [nextCookies(), expo()],
 });
