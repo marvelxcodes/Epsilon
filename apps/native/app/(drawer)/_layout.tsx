@@ -1,39 +1,65 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Link } from "expo-router";
-import { Drawer } from "expo-router/drawer";
+import React from "react";
+import { Tabs } from "expo-router";
+import { TabBarIcon } from "@/components/tabbar-icon";
+import { useColorScheme } from "@/lib/use-color-scheme";
 
-import { HeaderButton } from "@/components/header-button";
+export default function TabsLayout() {
+	const { isDarkColorScheme } = useColorScheme();
 
-const DrawerLayout = () => {
 	return (
-		<Drawer>
-			<Drawer.Screen
+		<Tabs
+			screenOptions={{
+				headerShown: false,
+				tabBarActiveTintColor: isDarkColorScheme
+					? "hsl(217.2 91.2% 59.8%)"
+					: "hsl(221.2 83.2% 53.3%)",
+				tabBarInactiveTintColor: isDarkColorScheme
+					? "hsl(215 20.2% 65.1%)"
+					: "hsl(215.4 16.3% 46.9%)",
+				tabBarStyle: {
+					backgroundColor: isDarkColorScheme
+						? "hsl(222.2 84% 4.9%)"
+						: "hsl(0 0% 100%)",
+					borderTopColor: isDarkColorScheme
+						? "hsl(217.2 32.6% 17.5%)"
+						: "hsl(214.3 31.8% 91.4%)",
+				},
+			}}
+		>
+			<Tabs.Screen
 				name="index"
 				options={{
-					headerTitle: "Home",
-					drawerLabel: "Home",
-					drawerIcon: ({ size, color }) => (
-						<Ionicons name="home-outline" size={size} color={color} />
-					),
+					title: "Home",
+					tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
 				}}
 			/>
-			<Drawer.Screen
+			<Tabs.Screen
+				name="reminders"
+				options={{
+					title: "Reminders",
+					tabBarIcon: ({ color }) => <TabBarIcon name="bell" color={color} />,
+				}}
+			/>
+			<Tabs.Screen
+				name="fall-detection"
+				options={{
+					title: "Fall Detection",
+					tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color} />,
+				}}
+			/>
+			<Tabs.Screen
+				name="settings"
+				options={{
+					title: "Settings",
+					tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+				}}
+			/>
+			<Tabs.Screen
 				name="(tabs)"
 				options={{
-					headerTitle: "Tabs",
-					drawerLabel: "Tabs",
-					drawerIcon: ({ size, color }) => (
-						<MaterialIcons name="border-bottom" size={size} color={color} />
-					),
-					headerRight: () => (
-						<Link href="/modal" asChild>
-							<HeaderButton />
-						</Link>
-					),
+					href: null,
 				}}
 			/>
-		</Drawer>
+		</Tabs>
 	);
-};
-
-export default DrawerLayout;
+}

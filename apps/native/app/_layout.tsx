@@ -13,6 +13,7 @@ import React, { useRef } from "react";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { Platform } from "react-native";
 import { setAndroidNavigationBar } from "@/lib/android-navigation-bar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const LIGHT_THEME: Theme = {
 	...DefaultTheme,
@@ -26,7 +27,7 @@ const DARK_THEME: Theme = {
 export const unstable_settings = {
 	initialRouteName: "(drawer)",
 };
-
+const queryClient = new QueryClient()
 export default function RootLayout() {
 	const hasMounted = useRef(false);
 	const { colorScheme, isDarkColorScheme } = useColorScheme();
@@ -50,6 +51,7 @@ export default function RootLayout() {
 	}
 	return (
 		<ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+			<QueryClientProvider client={queryClient}>
 			<StatusBar style={isDarkColorScheme ? "light" : "dark"} />
 			<GestureHandlerRootView style={{ flex: 1 }}>
 				<Stack>
@@ -60,6 +62,7 @@ export default function RootLayout() {
 					/>
 				</Stack>
 			</GestureHandlerRootView>
+			</QueryClientProvider>
 		</ThemeProvider>
 	);
 }
