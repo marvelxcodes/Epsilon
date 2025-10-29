@@ -1,5 +1,5 @@
 {
-  "name": "fallbag",
+  "name": "epsilon",
   "private": true,
   "type": "module",
   "workspaces": {
@@ -21,10 +21,10 @@
     "check-types": "turbo check-types",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
-    "db:push": "turbo -F @fallbag/db db:push",
-    "db:studio": "turbo -F @fallbag/db db:studio",
-    "db:generate": "turbo -F @fallbag/db db:generate",
-    "db:migrate": "turbo -F @fallbag/db db:migrate"
+    "db:push": "turbo -F @epsilon/db db:push",
+    "db:studio": "turbo -F @epsilon/db db:studio",
+    "db:generate": "turbo -F @epsilon/db db:generate",
+    "db:migrate": "turbo -F @epsilon/db db:migrate"
   },
   "dependencies": {
     "dotenv": "^17.2.2",

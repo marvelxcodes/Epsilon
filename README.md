@@ -1,4 +1,4 @@
-# fallbag
+# epsilon
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Self, and more.
 
@@ -55,7 +55,7 @@ Use the Expo Go app to run the mobile application.
 ## Project Structure
 
 ```
-fallbag/
+epsilon/
 ├── apps/
 │   └── web/         # Fullstack application (Next.js)
 │   ├── native/      # Mobile application (React Native, Expo)
