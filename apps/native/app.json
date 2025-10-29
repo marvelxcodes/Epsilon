@@ -20,7 +20,7 @@
 			},
 			"edgeToEdgeEnabled": true,
 			"predictiveBackGestureEnabled": false,
-			"package": "com.anonymous.mybettertapp"
+			"package": "com.abdulkalamazad1001.fallbag"
 		},
 		"web": {
 			"output": "static",
