@@ -123,12 +123,15 @@ export default function Home() {
                     Get Started →
                   </Button>
                 </Link>
+				<a target="_blank" href="https://drive.google.com/drive/folders/17TV-YBChv-CcmzILdUiMXs1KitCvrxVa?usp=sharing" rel="noopener noreferrer">
+
                 <Button size="lg" variant="outline" className="border-2 border-blue-500 text-blue-500 hover:bg-blue-500/10 text-lg px-8">
                   Download App
                   <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </Button>
+				</a>
               </div>
             </div>
             <div className="lg:w-1/2 mt-10 lg:mt-0">
