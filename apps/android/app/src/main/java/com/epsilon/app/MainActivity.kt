@@ -42,6 +42,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        // Enable high refresh rate for smooth animations
+        window.attributes.preferredDisplayModeId = 0 // Use highest available refresh rate
+        
         sessionManager = SessionManager(applicationContext)
         
         // Request all necessary permissions
