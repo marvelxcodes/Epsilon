@@ -18,6 +18,9 @@ export const auth = betterAuth<BetterAuthOptions>({
     "exp://",
   ],
   advanced: {
+    ipAddress: {
+      disableIpTracking: false,
+    },
     useSecureCookies: process.env.NODE_ENV === "production",
     crossSubDomainCookies: {
       enabled: true,
