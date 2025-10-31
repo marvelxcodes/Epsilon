@@ -58,17 +58,17 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = Blue50,
     onPrimary = Color.White,
-    primaryContainer = Blue90,
+    primaryContainer = LightPurple,
     onPrimaryContainer = Blue10,
     
     secondary = Cyan50,
     onSecondary = Color.White,
-    secondaryContainer = Cyan90,
+    secondaryContainer = LightMint,
     onSecondaryContainer = Blue20,
     
     tertiary = Teal50,
     onTertiary = Color.White,
-    tertiaryContainer = Teal90,
+    tertiaryContainer = LightGreen,
     onTertiaryContainer = Blue20,
     
     error = Error,
@@ -76,12 +76,12 @@ private val LightColorScheme = lightColorScheme(
     errorContainer = ErrorContainer,
     onErrorContainer = Color(0xFF8B0000),
     
-    background = Gray99,
+    background = Color(0xFFFAFAFA),
     onBackground = Gray10,
     
     surface = Color.White,
     onSurface = Gray10,
-    surfaceVariant = Blue95,
+    surfaceVariant = Color(0xFFF5F5F5),
     onSurfaceVariant = Gray40,
     
     outline = Gray50,
@@ -114,7 +114,7 @@ fun EpsilonTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

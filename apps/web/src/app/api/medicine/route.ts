@@ -8,11 +8,22 @@ import { NextResponse } from "next/server";
 // GET all medicines for user
 export async function GET(request: Request) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
+    const headersList = await headers();
+
+    // Debug logging
+    console.log("[Medicine API] Headers:", {
+      cookie: headersList.get("cookie"),
+      authorization: headersList.get("authorization"),
     });
 
+    const session = await auth.api.getSession({
+      headers: headersList,
+    });
+
+    console.log("[Medicine API] Session:", session ? "Found" : "Not found");
+
     if (!session?.user) {
+      console.log("[Medicine API] No user in session, returning 401");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -50,11 +61,25 @@ export async function GET(request: Request) {
 // POST create new medicine
 export async function POST(request: Request) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
+    const headersList = await headers();
+
+    // Debug logging
+    console.log("[Medicine POST API] Headers:", {
+      cookie: headersList.get("cookie"),
+      authorization: headersList.get("authorization"),
     });
 
+    const session = await auth.api.getSession({
+      headers: headersList,
+    });
+
+    console.log(
+      "[Medicine POST API] Session:",
+      session ? "Found" : "Not found"
+    );
+
     if (!session?.user) {
+      console.log("[Medicine POST API] No user in session, returning 401");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

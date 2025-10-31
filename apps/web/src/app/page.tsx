@@ -104,7 +104,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="relative bg-black text-white pt-28 pb-20">
-  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent opacity-50"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent opacity-50"></div>
         <div className="container mx-auto px-6 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
             <div className="lg:w-1/2 space-y-10">

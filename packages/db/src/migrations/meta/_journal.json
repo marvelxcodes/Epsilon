@@ -29,6 +29,13 @@
       "when": 1761696627512,
       "tag": "0003_unique_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761901019725,
+      "tag": "0004_melted_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

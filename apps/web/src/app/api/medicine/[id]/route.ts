@@ -41,6 +41,11 @@ export async function GET(request: Request, { params }: { params: Params }) {
   }
 }
 
+// PUT update medicine (alias for PATCH for compatibility)
+export async function PUT(request: Request, { params }: { params: Params }) {
+  return PATCH(request, { params });
+}
+
 // PATCH update medicine
 export async function PATCH(request: Request, { params }: { params: Params }) {
   try {
@@ -66,21 +71,38 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
       reminderEnabled,
     } = body;
 
-    const updates: Record<string, string | Date | null> = {
+    // biome-ignore lint: complex type needed for updates
+    const updates: Record<string, any> = {
       updatedAt: new Date(),
     };
 
-    if (name !== undefined) updates.name = name;
-    if (dosage !== undefined) updates.dosage = dosage;
-    if (frequency !== undefined) updates.frequency = frequency;
-    if (time !== undefined) updates.time = time;
-    if (startDate !== undefined) updates.startDate = new Date(startDate);
-    if (endDate !== undefined)
-      updates.endDate = endDate ? new Date(endDate) : null;
-    if (notes !== undefined) updates.notes = notes;
-    if (isActive !== undefined) updates.isActive = isActive ? "true" : "false";
-    if (reminderEnabled !== undefined)
+    if (name !== undefined && name !== null && name !== "") {
+      updates.name = name;
+    }
+    if (dosage !== undefined && dosage !== null && dosage !== "") {
+      updates.dosage = dosage;
+    }
+    if (frequency !== undefined && frequency !== null && frequency !== "") {
+      updates.frequency = frequency;
+    }
+    if (time !== undefined && time !== null && time !== "") {
+      updates.time = time;
+    }
+    if (startDate !== undefined && startDate !== null && startDate !== "") {
+      updates.startDate = new Date(startDate);
+    }
+    if (endDate !== undefined && endDate !== null) {
+      updates.endDate = endDate && endDate !== "" ? new Date(endDate) : null;
+    }
+    if (notes !== undefined && notes !== null) {
+      updates.notes = notes;
+    }
+    if (isActive !== undefined && isActive !== null) {
+      updates.isActive = isActive ? "true" : "false";
+    }
+    if (reminderEnabled !== undefined && reminderEnabled !== null) {
       updates.reminderEnabled = reminderEnabled ? "true" : "false";
+    }
 
     const updated = await db
       .update(medicine)
@@ -99,9 +121,13 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
       medicine: updated[0],
       message: "Medicine updated successfully",
     });
-  } catch {
+  } catch (error) {
+    console.error("[Medicine Update Error]", error);
     return NextResponse.json(
-      { error: "Failed to update medicine" },
+      {
+        error: "Failed to update medicine",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

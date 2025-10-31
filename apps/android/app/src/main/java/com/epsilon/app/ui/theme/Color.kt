@@ -2,6 +2,21 @@ package com.epsilon.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Modern Pastel Colors inspired by the reference design
+val LightPurple = Color(0xFFE8E1F5)
+val LightBlue = Color(0xFFD1E7F8)
+val LightYellow = Color(0xFFFFF9C4)
+val LightGreen = Color(0xFFD4F1D4)
+val LightPeach = Color(0xFFFFF5E1)
+val LightPink = Color(0xFFFCE4EC)
+val LightMint = Color(0xFFE0F2F1)
+
+// Action Card Colors
+val CardBlue = Color(0xFFD1E7F8)
+val CardYellow = Color(0xFFFFF5E1)
+val CardGreen = Color(0xFFD4F1D4)
+val CardPeach = Color(0xFFFFF9C4)
+
 // Light Theme Blues
 val Blue10 = Color(0xFF001F3D)
 val Blue20 = Color(0xFF003366)

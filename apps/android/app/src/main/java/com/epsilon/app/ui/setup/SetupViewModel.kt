@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.epsilon.app.data.api.ESP32ApiClient
+import com.epsilon.app.data.fcm.FcmTokenSync
 import com.epsilon.app.data.session.SessionManager
 import com.epsilon.app.data.wifi.ESP32Device
 import com.epsilon.app.data.wifi.WiFiDeviceManager
@@ -31,6 +32,7 @@ class SetupViewModel(
     
     private val wifiManager = WiFiDeviceManager(context)
     private val esp32ApiClient = ESP32ApiClient()
+    private val fcmTokenSync = FcmTokenSync(context, sessionManager)
     
     private val _uiState = MutableStateFlow<SetupUiState>(SetupUiState.Idle)
     val uiState: StateFlow<SetupUiState> = _uiState.asStateFlow()
@@ -39,7 +41,12 @@ class SetupViewModel(
     
     init {
         viewModelScope.launch {
-            authToken = sessionManager.token.first() ?: ""
+            try {
+                authToken = sessionManager.token.first() ?: ""
+            } catch (e: Exception) {
+                android.util.Log.e("SetupViewModel", "Error loading auth token", e)
+                authToken = ""
+            }
         }
     }
     
@@ -111,6 +118,16 @@ class SetupViewModel(
             onSuccess = { response ->
                 if (response.success) {
                     _uiState.value = SetupUiState.Success(device)
+                    
+                    // Register FCM token after successful setup
+                    viewModelScope.launch {
+                        try {
+                            fcmTokenSync.syncIfNeeded()
+                            android.util.Log.d("SetupViewModel", "FCM token registration initiated")
+                        } catch (e: Exception) {
+                            android.util.Log.e("SetupViewModel", "Error registering FCM token", e)
+                        }
+                    }
                 } else {
                     _uiState.value = SetupUiState.Error(
                         response.message ?: "Configuration failed"
@@ -136,5 +153,6 @@ class SetupViewModel(
     override fun onCleared() {
         super.onCleared()
         esp32ApiClient.close()
+        fcmTokenSync.close()
     }
 }

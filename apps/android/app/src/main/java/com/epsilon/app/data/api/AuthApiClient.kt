@@ -1,5 +1,7 @@
 package com.epsilon.app.data.api
 
+import android.util.Log
+import com.epsilon.app.BuildConfig
 import com.epsilon.app.data.model.AuthResponse
 import com.epsilon.app.data.model.LoginRequest
 import com.epsilon.app.data.model.SignUpRequest
@@ -14,7 +16,11 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
 class AuthApiClient {
-    private val baseUrl = "http://192.168.3.128:3001/api/auth"
+    private val baseUrl = "${BuildConfig.BACKEND_URL}/api/auth"
+    
+    companion object {
+        private const val TAG = "AuthApiClient"
+    }
     
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -42,12 +48,24 @@ class AuthApiClient {
                 setBody(LoginRequest(email, password))
             }
             
-            // Extract cookie from response headers if present
-            val cookie = response.headers["Set-Cookie"]
+            // Extract session token from Set-Cookie header
+            val cookies = response.headers.getAll("Set-Cookie") ?: emptyList()
+            val sessionToken = extractSessionToken(cookies)
+            
+            if (sessionToken.isNullOrEmpty()) {
+                Log.e(TAG, "No session token found in response")
+                return Result.failure(Exception("Authentication failed: No session token received"))
+            }
             
             val authResponse: AuthResponse = response.body()
-            Result.success(authResponse)
+            
+            // Add the extracted token to the response
+            val responseWithToken = authResponse.copy(token = sessionToken)
+            
+            Log.d(TAG, "Sign in successful, token extracted")
+            Result.success(responseWithToken)
         } catch (e: Exception) {
+            Log.e(TAG, "Sign in error", e)
             Result.failure(e)
         }
     }
@@ -58,14 +76,42 @@ class AuthApiClient {
                 setBody(SignUpRequest(name, email, password))
             }
             
-            // Extract cookie from response headers if present
-            val cookie = response.headers["Set-Cookie"]
+            // Extract session token from Set-Cookie header
+            val cookies = response.headers.getAll("Set-Cookie") ?: emptyList()
+            val sessionToken = extractSessionToken(cookies)
+            
+            if (sessionToken.isNullOrEmpty()) {
+                Log.e(TAG, "No session token found in response")
+                return Result.failure(Exception("Registration failed: No session token received"))
+            }
             
             val authResponse: AuthResponse = response.body()
-            Result.success(authResponse)
+            
+            // Add the extracted token to the response
+            val responseWithToken = authResponse.copy(token = sessionToken)
+            
+            Log.d(TAG, "Sign up successful, token extracted")
+            Result.success(responseWithToken)
         } catch (e: Exception) {
+            Log.e(TAG, "Sign up error", e)
             Result.failure(e)
         }
+    }
+    
+    /**
+     * Extract session token from Set-Cookie headers
+     * Looks for better-auth.session_token cookie
+     */
+    private fun extractSessionToken(cookies: List<String>): String? {
+        for (cookie in cookies) {
+            if (cookie.startsWith("better-auth.session_token=")) {
+                // Extract the token value before the first semicolon
+                val tokenStart = cookie.indexOf("=") + 1
+                val tokenEnd = cookie.indexOf(";").takeIf { it > 0 } ?: cookie.length
+                return cookie.substring(tokenStart, tokenEnd).trim()
+            }
+        }
+        return null
     }
     
     fun close() {

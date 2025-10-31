@@ -285,7 +285,7 @@ fun SetupInstructionsCard() {
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(13.dp))
                 Text(
                     "Setup Instructions",
                     style = MaterialTheme.typography.titleMedium,
@@ -294,7 +294,7 @@ fun SetupInstructionsCard() {
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             SetupStep(number = 1, text = "Power on your ESP32-S3 device")
             SetupStep(number = 2, text = "Device will create a WiFi Access Point")
             SetupStep(number = 3, text = "Tap 'Scan for Devices' to find it")

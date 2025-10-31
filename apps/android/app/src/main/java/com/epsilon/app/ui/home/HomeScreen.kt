@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +25,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import com.epsilon.app.data.session.SessionManager
+import com.epsilon.app.data.emergency.EmergencyContactManager
+import com.epsilon.app.data.emergency.EmergencyCallManager
 import com.epsilon.app.ui.auth.AuthViewModel
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
@@ -36,503 +41,346 @@ fun HomeScreen(
     viewModel: AuthViewModel,
     sessionManager: SessionManager,
     onSignOut: () -> Unit,
-    onNavigateToSetup: () -> Unit
+    onNavigateToSetup: () -> Unit,
+    onNavigateToBluetooth: () -> Unit = {},
+    onNavigateToEmergencyContact: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToMedication: () -> Unit = {},
+    onNavigateToReminder: () -> Unit = {}
 ) {
     var userName by remember { mutableStateOf("User") }
-    var userEmail by remember { mutableStateOf("") }
-    var userId by remember { mutableStateOf("") }
-    var emailVerified by remember { mutableStateOf(false) }
-    var createdAt by remember { mutableStateOf("") }
-    var updatedAt by remember { mutableStateOf("") }
-    var authToken by remember { mutableStateOf("") }
-    var showLogoutDialog by remember { mutableStateOf(false) }
-    var showTokenDialog by remember { mutableStateOf(false) }
-    
-    // Animation states
-    var animateProfile by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val emergencyContactManager = remember { EmergencyContactManager(context) }
+    val emergencyCallManager = remember { EmergencyCallManager(context) }
     
     LaunchedEffect(Unit) {
-        userName = sessionManager.userName.first() ?: "User"
-        userEmail = sessionManager.userEmail.first() ?: ""
-        userId = sessionManager.userId.first() ?: ""
-        emailVerified = sessionManager.emailVerified.first() ?: false
-        createdAt = sessionManager.createdAt.first() ?: ""
-        updatedAt = sessionManager.updatedAt.first() ?: ""
-        authToken = sessionManager.token.first() ?: ""
-        animateProfile = true
+        try {
+            userName = sessionManager.userName.first() ?: "User"
+        } catch (e: Exception) {
+            android.util.Log.e("HomeScreen", "Error loading user name", e)
+            userName = "User"
+        }
     }
     
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Gradient background
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.surface
-                        )
-                    )
-                )
-        )
-        
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Custom Top Bar with Profile
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 24.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Welcome back,",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = userName,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        
-                        IconButton(
-                            onClick = { showLogoutDialog = true },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
-                        ) {
-                            Icon(
-                                Icons.Default.ExitToApp,
-                                contentDescription = "Sign Out",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                }
-            }
-            
-            // Profile Hero Card with Animation
-            item {
-                AnimatedVisibility(
-                    visible = animateProfile,
-                    enter = fadeIn() + slideInVertically(),
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                ) {
-                    ProfileHeroCard(
-                        userName = userName,
-                        userEmail = userEmail,
-                        emailVerified = emailVerified,
-                        userId = userId
-                    )
-                }
-            }
-            
-            // Account Details Section
-            item {
-                Text(
-                    text = "Account Details",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
-            }
-            
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    DetailCard(
-                        icon = Icons.Outlined.Email,
-                        label = "Email Address",
-                        value = userEmail,
-                        verified = emailVerified
-                    )
-                    
-                    DetailCard(
-                        icon = Icons.Outlined.AccountCircle,
-                        label = "User ID",
-                        value = userId,
-                        isMonospace = true
-                    )
-                    
-                    DetailCard(
-                        icon = Icons.Outlined.DateRange,
-                        label = "Account Created",
-                        value = formatDate(createdAt)
-                    )
-                    
-                    DetailCard(
-                        icon = Icons.Outlined.Refresh,
-                        label = "Last Updated",
-                        value = formatDate(updatedAt)
-                    )
-                    
-                    DetailCard(
-                        icon = Icons.Outlined.Lock,
-                        label = "Authentication Token",
-                        value = "••••••••••••••••",
-                        actionLabel = "View",
-                        onAction = { showTokenDialog = true }
-                    )
-                }
-            }
-            
-            // Quick Actions Section
-            item {
-                Text(
-                    text = "Quick Actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
-            }
-            
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        QuickActionCard(
-                            title = "Edit Profile",
-                            icon = Icons.Outlined.Edit,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            // Handle edit profile
-                        }
-                        
-                        QuickActionCard(
-                            title = "Settings",
-                            icon = Icons.Outlined.Settings,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            // Handle settings
-                        }
-                    }
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        QuickActionCard(
-                            title = "Setup Device",
-                            icon = Icons.Default.Add,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            onNavigateToSetup()
-                        }
-                        
-                        QuickActionCard(
-                            title = "Help",
-                            icon = Icons.Outlined.Info,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            // Handle help
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // Sign Out Dialog
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            icon = {
-                Icon(
-                    Icons.Default.ExitToApp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            },
-            title = {
-                Text("Sign Out", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Text("Are you sure you want to sign out of your account?")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showLogoutDialog = false
-                        viewModel.signOut()
-                        onSignOut()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Sign Out")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-    
-    // Token Dialog
-    if (showTokenDialog) {
-        AlertDialog(
-            onDismissRequest = { showTokenDialog = false },
-            icon = {
-                Icon(Icons.Outlined.Lock, contentDescription = null)
-            },
-            title = {
-                Text("Authentication Token", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Column {
-                    Text(
-                        "Your authentication token:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = authToken,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                            ),
-                            maxLines = 6,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showTokenDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun ProfileHeroCard(
-    userName: String,
-    userEmail: String,
-    emailVerified: Boolean,
-    userId: String
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(24.dp)),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.tertiaryContainer
-                        )
-                    )
-                )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Avatar
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .shadow(8.dp, CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 4.dp,
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = userName.take(2).uppercase(),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Name
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Email with verification badge
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = userEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                    
-                    if (emailVerified) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Verified",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFF4CAF50)
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // User ID Badge
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                ) {
-                    Text(
-                        text = "ID: ${userId.take(12)}...",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun StatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    gradient: List<Color>,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .height(140.dp)
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Greeting Header
+            item {
+                GreetingHeader(
+                    userName = userName,
+                    onProfileClick = onNavigateToProfile
+                )
+            }
+            
+            // Quick Actions Grid
+            item {
+                QuickActionsGrid(
+                    onAddDeviceClick = onNavigateToBluetooth,
+                    onEditClick = onNavigateToProfile,
+                    onMedicationClick = onNavigateToMedication,
+                    onReminderClick = onNavigateToReminder
+                )
+            }
+            
+            // Test Emergency Call Button
+            item {
+                TestEmergencyCallButton(
+                    emergencyContactManager = emergencyContactManager,
+                    emergencyCallManager = emergencyCallManager
+                )
+            }
+            
+            // Paired Devices Section
+            item {
+                Text(
+                    text = "Paired Devices",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            
+            // Paired Devices List (ESP32 Wearables)
+            item {
+                PairedDevicesSection(
+                    onDeviceClick = { deviceId ->
+                        // Navigate to device details/config
+                        onNavigateToSetup()
+                    }
+                )
+            }
+            
+            // Settings Section
+            item {
+                Text(
+                    text = "Settings",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            
+            // Settings Cards 
+            item {
+                SettingsSection(
+                    onDeviceSetupClick = onNavigateToSetup,
+                    onEmergencyClick = onNavigateToEmergencyContact
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GreetingHeader(
+    userName: String,
+    onProfileClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 24.dp)
+        ,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Hello ${userName.split(" ").first()},",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "What are you looking for?",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        IconButton(
+            onClick = onProfileClick,
+            modifier = Modifier
+                .size(48.dp)
                 .background(
-                    Brush.linearGradient(
-                        colors = gradient.map { it.copy(alpha = 0.15f) }
-                    )
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = CircleShape
                 )
         ) {
-            Column(
+            Icon(
+                imageVector = Icons.Outlined.AccountCircle,
+                contentDescription = "Profile",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionsGrid(
+    onAddDeviceClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onMedicationClick: () -> Unit,
+    onReminderClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ModernQuickActionCard(
+                title = "Add Device",
+                backgroundColor = Color(0xFFD1E7F8),
+                icon = Icons.Outlined.BluetoothSearching,
+                modifier = Modifier.weight(1f),
+                onClick = onAddDeviceClick
+            )
+            ModernQuickActionCard(
+                title = "Edit Profile",
+                backgroundColor = Color(0xFFFFF5E1),
+                icon = Icons.Outlined.Edit,
+                modifier = Modifier.weight(1f),
+                onClick = onEditClick
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ModernQuickActionCard(
+                title = "Medication",
+                backgroundColor = Color(0xFFD4F1D4),
+                icon = Icons.Outlined.MedicalServices,
+                modifier = Modifier.weight(1f),
+                onClick = onMedicationClick
+            )
+            ModernQuickActionCard(
+                title = "Reminder",
+                backgroundColor = Color(0xFFFFF9C4),
+                icon = Icons.Outlined.Notifications,
+                modifier = Modifier.weight(1f),
+                onClick = onReminderClick
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernQuickActionCard(
+    title: String,
+    backgroundColor: Color,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(120.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .size(40.dp)
+                    .background(
+                        color = Color.Black,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = gradient[0]
+                    contentDescription = title,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
-                
-                Column {
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+fun PairedDevicesSection(
+    onDeviceClick: (String) -> Unit
+) {
+    // TODO: Fetch actual devices from API
+    // For now, showing sample data
+    val sampleDevices = remember {
+        listOf(
+            DeviceInfo(
+                id = "esp32-001",
+                name = "ESP32 Wearable",
+                status = "Connected",
+                battery = 85
+            )
+        )
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (sampleDevices.isEmpty()) {
+            // No devices paired yet
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 0.dp
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Watch,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "No devices paired",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = "Tap 'Add Device' to connect your ESP32 wearable",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
+            }
+        } else {
+            // Show paired devices
+            sampleDevices.forEach { device ->
+                DeviceCard(
+                    device = device,
+                    onClick = { onDeviceClick(device.id) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun DetailCard(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    verified: Boolean = false,
-    isMonospace: Boolean = false,
-    actionLabel: String? = null,
-    onAction: (() -> Unit)? = null
+fun DeviceCard(
+    device: DeviceInfo,
+    onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color(0xFFE8F5E9)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = 0.dp
         )
     ) {
         Row(
@@ -545,137 +393,289 @@ fun DetailCard(
                 modifier = Modifier
                     .size(56.dp)
                     .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.secondary
-                            )
-                        ),
+                        color = Color.Black,
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Watch,
+                    contentDescription = device.name,
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = device.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = device.status,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF4CAF50)
+                    )
+                    Text(
+                        text = "•",
+                        color = Color.Black.copy(alpha = 0.4f)
+                    )
+                    Icon(
+                        imageVector = Icons.Outlined.BatteryChargingFull,
+                        contentDescription = "Battery",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Black.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "${device.battery}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black.copy(alpha = 0.6f)
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Filled.ArrowForward,
+                contentDescription = null,
+                tint = Color.Black.copy(alpha = 0.4f)
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsSection(
+    onDeviceSetupClick: () -> Unit,
+    onEmergencyClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MainActionCard(
+            title = "Fall Detection Setup",
+            subtitle = "Configure sensitivity and alerts",
+            icon = Icons.Outlined.Settings,
+            backgroundColor = Color(0xFFE0F2F1),
+            onClick = onDeviceSetupClick
+        )
+        MainActionCard(
+            title = "Emergency Contacts",
+            subtitle = "Manage your emergency contacts",
+            icon = Icons.Outlined.Phone,
+            backgroundColor = Color(0xFFFFEBEE),
+            onClick = onEmergencyClick
+        )
+    }
+}
+
+// Data class for device info
+data class DeviceInfo(
+    val id: String,
+    val name: String,
+    val status: String,
+    val battery: Int
+)
+
+@Composable
+fun MainActionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = Color.Black,
                         shape = RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = title,
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
-            
             Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = value,
-                        style = if (isMonospace) {
-                            MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                            )
-                        } else {
-                            MaterialTheme.typography.bodyMedium
-                        },
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (verified) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Verified",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFF4CAF50)
-                        )
-                    }
-                }
-            }
-            
-            if (actionLabel != null && onAction != null) {
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onAction) {
-                    Text(actionLabel)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun QuickActionCard(
-    title: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(140.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 8.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.surface
-                        )
-                    )
-                )
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
-                        ),
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                    .shadow(4.dp, RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    modifier = Modifier.size(32.dp),
-                    tint = Color.White
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black.copy(alpha = 0.6f)
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+            Icon(
+                imageVector = Icons.Filled.ArrowForward,
+                contentDescription = null,
+                tint = Color.Black.copy(alpha = 0.4f)
             )
         }
     }
 }
 
-// Helper functions
+@Preview
+@Composable
+fun TestEmergencyCallButton(
+    emergencyContactManager: EmergencyContactManager,
+    emergencyCallManager: EmergencyCallManager
+) {
+    var showMessage by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Card(
+            onClick = {
+                val emergencyNumber = emergencyContactManager.getEmergencyContact()
+                if (emergencyNumber.isNullOrBlank()) {
+                    message = "No emergency contact set. Please configure one first."
+                    showMessage = true
+                } else if (!emergencyCallManager.hasCallPermission()) {
+                    message = "Call permission not granted. Please grant permission in settings."
+                    showMessage = true
+                } else {
+                    val success = emergencyCallManager.placeEmergencyCall(emergencyNumber)
+                    message = if (success) {
+                        "Emergency call initiated to $emergencyNumber"
+                    } else {
+                        "Failed to place emergency call"
+                    }
+                    showMessage = true
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFFCDD2) // Light red for emergency
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = Color(0xFFD32F2F), // Darker red
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Phone,
+                        contentDescription = "Test Emergency Call",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Emergency",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "Tap to perform an emergency call",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black.copy(alpha = 0.6f)
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = Color(0xFFD32F2F)
+                )
+            }
+        }
+        
+        if (showMessage) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = { showMessage = false }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Helper functions (kept for backward compatibility but not displayed)
 private fun formatDate(isoDate: String): String {
     if (isoDate.isEmpty()) return "N/A"
     return try {
@@ -688,29 +688,3 @@ private fun formatDate(isoDate: String): String {
         isoDate
     }
 }
-
-private fun calculateDaysSince(isoDate: String): String {
-    if (isoDate.isEmpty()) return "N/A"
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val date = inputFormat.parse(isoDate)
-        val daysDiff = ((Date().time - (date?.time ?: 0)) / (1000 * 60 * 60 * 24)).toInt()
-        when {
-            daysDiff == 0 -> "Today"
-            daysDiff == 1 -> "1 day"
-            daysDiff < 7 -> "$daysDiff days"
-            daysDiff < 30 -> "${daysDiff / 7} weeks"
-            daysDiff < 365 -> "${daysDiff / 30} months"
-            else -> "${daysDiff / 365} years"
-        }
-    } catch (e: Exception) {
-        "N/A"
-    }
-}
-
-data class ActivityItem(
-    val title: String,
-    val icon: ImageVector,
-    val time: String
-)

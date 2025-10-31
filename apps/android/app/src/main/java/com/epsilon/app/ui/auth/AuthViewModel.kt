@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.epsilon.app.data.api.AuthApiClient
+import com.epsilon.app.data.fcm.FcmTokenSync
 import com.epsilon.app.data.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class AuthUiState {
@@ -21,24 +24,19 @@ class AuthViewModel(context: Context) : ViewModel() {
     
     private val apiClient = AuthApiClient()
     private val sessionManager = SessionManager(context)
+    private val fcmTokenSync = FcmTokenSync(context, sessionManager)
     
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
     
-    private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
-    
-    init {
-        checkLoginStatus()
-    }
-    
-    private fun checkLoginStatus() {
-        viewModelScope.launch {
-            sessionManager.authToken.collect { token ->
-                _isLoggedIn.value = !token.isNullOrEmpty()
-            }
-        }
-    }
+    // Use StateIn to safely convert the Flow to StateFlow with proper lifecycle
+    // Use Eagerly to start immediately and avoid race conditions on app restart
+    val isLoggedIn: StateFlow<Boolean> = sessionManager.isLoggedIn
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
     
     fun signIn(email: String, password: String) {
         if (!validateInputs(email, password)) {
@@ -75,8 +73,17 @@ class AuthViewModel(context: Context) : ViewModel() {
                             updatedAt = response.user.updatedAt
                         )
                         
+                        // Sync FCM token after successful sign in
+                        viewModelScope.launch {
+                            try {
+                                fcmTokenSync.syncToken()
+                                android.util.Log.d("AuthViewModel", "FCM token synced after sign in")
+                            } catch (e: Exception) {
+                                android.util.Log.e("AuthViewModel", "Error syncing FCM token", e)
+                            }
+                        }
+                        
                         _uiState.value = AuthUiState.Success("Successfully signed in!")
-                        _isLoggedIn.value = true
                     } else {
                         _uiState.value = AuthUiState.Error("Invalid response from server")
                     }
@@ -130,8 +137,17 @@ class AuthViewModel(context: Context) : ViewModel() {
                             updatedAt = response.user.updatedAt
                         )
                         
+                        // Sync FCM token after successful sign up
+                        viewModelScope.launch {
+                            try {
+                                fcmTokenSync.syncToken()
+                                android.util.Log.d("AuthViewModel", "FCM token synced after sign up")
+                            } catch (e: Exception) {
+                                android.util.Log.e("AuthViewModel", "Error syncing FCM token", e)
+                            }
+                        }
+                        
                         _uiState.value = AuthUiState.Success("Account created successfully!")
-                        _isLoggedIn.value = true
                     } else {
                         _uiState.value = AuthUiState.Error("Invalid response from server")
                     }
@@ -170,7 +186,6 @@ class AuthViewModel(context: Context) : ViewModel() {
     fun signOut() {
         viewModelScope.launch {
             sessionManager.clearSession()
-            _isLoggedIn.value = false
             _uiState.value = AuthUiState.Idle
         }
     }
@@ -182,5 +197,6 @@ class AuthViewModel(context: Context) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         apiClient.close()
+        fcmTokenSync.close()
     }
 }
