@@ -74,8 +74,3 @@ epsilon/
 - `bun db:push`: Push schema changes to database
 - `bun db:studio`: Open database studio UI
 - `cd apps/web && bun generate-pwa-assets`: Generate PWA assets
-
-## Deployment
-
-For deploying to Vercel, see [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed instructions and configuration.
-
