@@ -1,0 +1,11 @@
+node_modules
+.turbo
+.next
+dist
+build
+*.log
+.env*.local
+apps/android
+apps/wearable
+.git
+.github
