@@ -43,22 +43,22 @@ class AuthApiClient {
     }
     
     suspend fun signIn(email: String, password: String): Result<AuthResponse> {
+        Log.w(email,  baseUrl)
         return try {
             val response = client.post("$baseUrl/sign-in/email") {
                 setBody(LoginRequest(email, password))
             }
+
             
-            // Extract session token from Set-Cookie header
-            val cookies = response.headers.getAll("Set-Cookie") ?: emptyList()
-            val sessionToken = extractSessionToken(cookies)
-            
+            val authResponse: AuthResponse = response.body()
+
+            val sessionToken = authResponse.token
+
             if (sessionToken.isNullOrEmpty()) {
                 Log.e(TAG, "No session token found in response")
                 return Result.failure(Exception("Authentication failed: No session token received"))
             }
-            
-            val authResponse: AuthResponse = response.body()
-            
+
             // Add the extracted token to the response
             val responseWithToken = authResponse.copy(token = sessionToken)
             

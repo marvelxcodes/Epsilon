@@ -20,7 +20,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Backend URL configuration
-        buildConfigField("String", "BACKEND_URL", "\"http://10.51.6.19:3001\"")
+        buildConfigField("String", "BACKEND_URL", "\"https://epsilon-kohl.vercel.app\"")
     }
 
     buildTypes {
@@ -31,11 +31,11 @@ android {
                 "proguard-rules.pro"
             )
             // Production backend URL
-            buildConfigField("String", "BACKEND_URL", "\"https://fallbag.vercel.app\"")
+            buildConfigField("String", "BACKEND_URL", "\"https://epsilon-kohl.vercel.app\"")
         }
         debug {
             // Development backend URL
-            buildConfigField("String", "BACKEND_URL", "\"http://10.51.6.19:3001\"")
+            buildConfigField("String", "BACKEND_URL", "\"https://epsilon-kohl.vercel.app\"")
         }
     }
     compileOptions {
