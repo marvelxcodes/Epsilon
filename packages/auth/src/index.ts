@@ -6,6 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth<BetterAuthOptions>({
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
   database: drizzleAdapter(db, {
     provider: "pg",
 
